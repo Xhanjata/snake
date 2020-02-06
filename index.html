@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="babylon.js"></script>
+
+    <style>
+        #canvas {
+            width: 100%;
+            height: 80% !important;
+        }
+        body{
+
+        height:100%;
+        }
+    </style>
+</head>
+<body>
+    
+    <canvas id="canvas"></canvas>
+    <script>
+        var punktzahl = 1;
+        window.addEventListener('DOMContentLoaded', function () {
+            var canvas = document.getElementById('canvas');
+            var engine = new BABYLON.Engine(canvas, true , {stencil:true});
+            var createScene = function () {
+                var scene = new BABYLON.Scene(engine);
+                var SceneOptimizer = new BABYLON.SceneOptimizerOptions(scene);
+                SceneOptimizer.targetFrameRate=20;
+                scene.clearColor = new BABYLON.Color3.White();
+                var background= createBackground();
+              //  var kasten = [];
+               // createKasten(kasten);
+               var box = [];
+               var wohin = "false";
+                var wohinarr = [];
+                   createBox1(box , wohinarr , wohin);
+                console.log(box[0].positions);
+                console.log(punktzahl);
+              // var box2 = createBox2();
+
+                var kugeln =[];
+                for (let i = 0; i <18 ; i++) {
+                    kugeln[i]= createSphere();
+                }
+               var camera = createCamera(canvas , box);
+
+                camera.setTarget(BABYLON.Vector3.Zero());
+                
+
+
+
+                        var gameover = grenze(box);
+                        kugeln =  oscillation(scene , box , wohin , gameover , kugeln , scene , wohinarr);
+
+
+
+                return scene;0.01
+            }
+
+
+            var scene = createScene();
+            engine.runRenderLoop(function () {
+                scene.render();
+            });
+
+
+            function createKasten(kasten){
+                var zählen = 0;
+                var x=-4.5;
+                var y=-4.5;
+                for (let i = 0; i < 10; i++) {
+                    for (let j = 0; j < 10; j++) {
+                       kasten[zählen]=BABYLON.Mesh.CreateBox("Box", 0.9, scene);
+                       var myMaterial = new BABYLON.StandardMaterial("myMaterial", scene);
+                       myMaterial.diffuseColor = new BABYLON.Color3(1, 0, 1);
+                myMaterial.specularColor = new BABYLON.Color3(0.5, 0.6, 0.87);
+                myMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1);
+                myMaterial.ambientColor = new BABYLON.Color3(0.23, 0.98, 0.53);
+                kasten[zählen].material = myMaterial;
+                        kasten[zählen].position.x = x;
+                        kasten[zählen].position.y = y;
+                        kasten[zählen] = new BABYLON.HighlightLayer(kasten[zählen], scene);
+                        
+                        x++;
+                        zählen++
+                    }
+                    x=-4.5;
+                    y++;
+                }
+            }
+
+            //Hintergrund generieren
+            function createBackground(){
+                var plane = BABYLON.MeshBuilder.CreatePlane("plane", {height:15, width: 30, sideOrientation: BABYLON.Mesh.DOUBLESIDE}, scene);
+                return plane;
+            }
+
+            //Box 1 generieren
+            function createBox1(box , wohinarr , wohin){
+                var myMaterial = new BABYLON.StandardMaterial("myMaterial", scene);
+
+                myMaterial.diffuseColor = new BABYLON.Color3(1, 0, 1);
+                myMaterial.specularColor = new BABYLON.Color3(0.5, 0.6, 0.87);
+                myMaterial.emissiveColor = new BABYLON.Color3(1, 0, 0);
+                myMaterial.ambientColor = new BABYLON.Color3(0.23, 0.98, 0.53);
+                
+                var laenge = box.length;
+                if(laenge == -1){
+                    laenge=0;
+                }
+                console.log(laenge);
+                  box[laenge]  = BABYLON.Mesh.CreateBox("Box", 0.5 , scene);
+                  if(box.length>2){
+                  wohinarr[box.length -1 ] = wohinarr[box.length -2];
+                  }
+                  if(box.length==1){
+                      wohinarr[0] = wohin;
+                      console.log(wohinarr[0]);
+                      
+                  }
+                  if(box.length==2){
+                      wohinarr.push(wohin);
+                  }
+                    console.log(box[0].positions);
+                box[laenge].material = myMaterial;
+            }
+
+            //Box 2 gererieren
+            function createBox2(){
+                //Reference-Object
+                var box2 = BABYLON.Mesh.CreateBox("Box", 1.0, scene);
+                var myMaterial2 = new BABYLON.StandardMaterial("myMaterial", scene);
+                myMaterial2.diffuseColor = new BABYLON.Color3(1, 0, 1);
+                myMaterial2.specularColor = new BABYLON.Color3(0.5, 0.6, 0.87);
+                myMaterial2.emissiveColor = new BABYLON.Color3(0, 1, 0);
+                myMaterial2.ambientColor = new BABYLON.Color3(0.23, 0.98, 0.53);
+                box2.material = myMaterial2;
+                return box2;
+            }
+
+            //Kamera generieren
+            function createCamera(canvas , box){
+
+            var camera = new BABYLON.ArcRotateCamera("arcCam",
+                BABYLON.Tools.ToRadians(90),
+                BABYLON.Tools.ToRadians(90),
+                20.0,box[0].position,scene);
+            
+            return camera;
+            }
+
+            function createSphere() {
+                var mySphere = BABYLON.MeshBuilder.CreateSphere("mySphere", {diameter: 0.4, diameterX: 0.4}, scene);
+                mySphere.position.x=Math.round(Math.random()*28-13.7);
+                mySphere.position.y=Math.round(Math.random()*14.5-7);
+                var myMaterialSphere = new BABYLON.StandardMaterial("myMaterial", scene);
+                myMaterialSphere.diffuseColor = new BABYLON.Color3(1, 0, 1);
+                myMaterialSphere.specularColor = new BABYLON.Color3(0.5, 0.6, 0.87);
+                myMaterialSphere.emissiveColor = new BABYLON.Color3(0, 1, 0);
+                myMaterialSphere.ambientColor = new BABYLON.Color3(0.23, 0.98, 0.53);
+                mySphere.material = myMaterialSphere;
+                return mySphere;
+            }
+            function oscillation(scene , box , wohin , gameover , kugel , scene , wohinarr){
+                var a = 0; // for oscillation
+                scene.registerBeforeRender(function () {
+                    a +=0.005;
+                    var sign = Math.cos(a)/Math.abs(Math.cos(a));
+                    var gameover = grenze(box);
+                    console.log(gameover);
+                    document.addEventListener('keydown', (e) => {
+
+                            if (e.keyCode == 39 && wohin != "links") {
+                                wohin = "rechts";
+                                wohinarr[0]= wohin;
+                            }
+                            if (e.keyCode == 37 && wohin != "rechts") {
+                                wohin = "links";
+                                wohinarr[0]= wohin;
+
+                            }
+                            if (e.keyCode == 38 && wohin != "unten") {
+                                wohin = "oben";
+                                wohinarr[0]= wohin;
+
+                            }
+                            if (e.keyCode == 40 && wohin != "oben") {
+                                wohin = "unten";
+                                wohinarr[0]= wohin;
+
+                            }
+
+                    });
+                    
+                if(gameover !=true) {
+
+                   kugel = bewegen(sign, wohin, box , kugel , scene , wohinarr);
+                }
+                    // console.log(box.getBoundingInfo().boundingBox.centerWorld);
+                    return kugel;
+
+                });
+            }
+
+            function wohinWeitergeben(wohin , wohinarr , box){
+                var lauf = wohinarr.length;
+                console.log(box[0].position.x);
+                if(box.length>1){
+                    console.log("wohinWeitergeben");
+                for (let i = 1; i < lauf ; i++) {
+                    if(Math.abs(box[i].position.x - box[i-1].position.x) >0.3 || + Math.abs(box[i].position.y - box[i-1].position.y) >0.3){
+                        wohinarr[i] = wohinarr[i-1];
+                    }
+                   
+                }
+                }
+            }
+            function pausecomp(millis)
+{
+    var date = new Date();
+    var curDate = null;
+    do { curDate = new Date(); }
+    while(curDate-date < millis);
+}
+            function bewegen(sign , wohin , box , kugel, scene , wohinarr){
+                var laenge = box.length;
+                if(laenge==-1){
+                    laenge = 0;
+                }
+                    if (wohin == "oben") {
+                        hintereBoxenBewegen(box);
+
+                            box[0].position.y += 0.5;
+                            kugel = kugelnEssen(box, kugel, scene, wohin, wohinarr);
+                            wohinWeitergeben(wohin , wohinarr , box);
+                            pausecomp(100);
+                    } else if (wohin == "unten") {
+                        hintereBoxenBewegen(box);
+
+                            box[0].position.y -= 0.5;
+                            kugel = kugelnEssen(box, kugel, scene, wohin, wohinarr);
+                            wohinWeitergeben(wohin , wohinarr , box);
+                            
+                            pausecomp(100);
+                    } else if (wohin == "links") {
+                        hintereBoxenBewegen(box);
+
+                            box[0].position.x += 0.5;
+                            kugel = kugelnEssen(box, kugel, scene, wohin, wohinarr);
+                            wohinWeitergeben(wohin , wohinarr , box);
+                            pausecomp(100);
+                    } else if (wohin == "rechts") {
+                        hintereBoxenBewegen(box);
+
+                            box[0].position.x -= 0.5;
+                            kugel = kugelnEssen(box, kugel, scene, wohin, wohinarr);
+                            wohinWeitergeben(wohin , wohinarr , box);
+                            pausecomp(100);
+
+                    } else if (wohin == "false") {
+                    }
+                    
+                return kugel;
+            }
+// Finger weg!!!
+            function hintereBoxenBewegen(box){
+                var lauf = box.length -1;
+                console.log("Hintere BOX" + lauf);
+               for (let i = lauf; i >0 ; i--) {
+                        box[i].position.x=box[i-1].position.x;
+                        box[i].position.y=box[i-1].position.y;
+                }
+            }
+            function isset($v){
+                return (typeof v !=="undefined");
+            }
+            function grenze(box) {
+                    if (box[0].position.x < -14.3 || box[0].position.x >= 14.3) {
+                        return gameover = true;
+                    }
+                    if (box[0].position.y < -6.7 || box[0].position.y >= 6.7) {
+                        return gameover = true;
+                    }
+                    for(let i = 1; i < box.length; i++){
+                    if(box[0].position.x == box[i].position.x && box[0].position.y == box[i].position.y){
+                        return gameover = true;
+                    }
+                }
+                }
+            
+
+
+            function kugelnEssen(box , kugel, scene , wohin , wohinarr, punktzahl){
+                var lauf = kugel.length;
+
+                for (let i = 0; i < lauf -1 ; i++) {
+                    console.log("Kugel " + kugel[i].positions);
+                    if(Math.abs(box[0].position.x - kugel[i].position.x) <=0.2 && Math.abs(box[0].position.y - kugel[i].position.y) <=0.2){
+                       kugel[i].dispose();
+                        kugel[i]=createSphere();
+                        punktzahl += 1;
+                        console.log(punktzahl+"Punkte");
+                        console.log("KugelEssen");
+                        var laenge = box.length -1;
+                        createBox1(box , wohinarr , wohin);
+                        laenge=box.length -1;
+                        if(laenge == -1){
+                            laenge = 0;
+                        }
+                        console.log(laenge);
+                        console.log(box[laenge-1].positions);
+                        if(wohin == "links") {
+                            box[laenge].position.x = box[laenge - 1].position.x - 0.6;
+                            box[laenge].position.y = box[laenge - 1].position.y ;
+                        }
+                        if(wohin == "oben") {
+                            box[laenge].position.y = box[laenge - 1].position.y - 0.6;
+                            box[laenge].position.x = box[laenge - 1].position.x;
+                        }
+                        if(wohin == "rechts") {
+                            box[laenge].position.x = box[laenge - 1].position.x + 0.6;
+                            box[laenge].position.y = box[laenge - 1].position.y;
+                        }
+                        if(wohin == "unten") {
+                            box[laenge].position.y = box[laenge - 1].position.y + 0.6;
+                            box[laenge].position.x = box[laenge - 1].position.x;
+                        }
+                    }
+                }
+
+                return kugel;
+            }
+        });
+        
+    </script>
+</body>
+</html>
